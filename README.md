@@ -1,10 +1,10 @@
-[deepseek_html_20251007_3b8717.html](https://github.com/user-attachments/files/22772119/deepseek_html_20251007_3b8717.html)
+[NoteQuizLive.html](https://github.com/user-attachments/files/22772135/NoteQuizLive.html)
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Adaptive Pitch Training</title>
+<title>D Major Scale Staff Position Trainer</title>
 <style>
   :root{
     --bg:#10121a;
@@ -344,9 +344,9 @@
 </style>
 </head>
 <body>
-  <div class="container" role="application" aria-label="Adaptive Pitch Training">
+  <div class="container" role="application" aria-label="D Major Scale Staff Position Trainer">
     <header>
-      <h1>Adaptive Pitch Training</h1>
+      <h1>D Major Scale — Staff Position Trainer</h1>
       <div class="controls">
         <label for="instrument">Instrument</label>
         <select id="instrument" aria-label="Instrument selector">
@@ -372,12 +372,12 @@
         
         <div class="timer-score">
           <div class="timer">
-            <div class="timer-value" id="timerValue">02:00</div>
+            <div class="timer-value" id="timerValue">01:00</div>
             <div class="timer-label">TIME REMAINING</div>
           </div>
           <div class="score">
-            <div class="score-value" id="scoreValue">—</div>
-            <div class="score-label">SCORE</div>
+            <div class="score-value" id="scoreValue">0</div>
+            <div class="score-label">NOTES CORRECT</div>
           </div>
         </div>
 
@@ -399,12 +399,12 @@
           <span id="holdVal">700</span>
 
           <button id="refPlay">Play Reference</button>
-          <button id="reset">Reset Exercise</button>
+          <button id="reset">Reset Sequence</button>
         </div>
 
         <!-- Share Score Section -->
         <div class="share-section" id="shareSection">
-          <div class="small-muted">Share your results with your teacher:</div>
+          <div class="small-muted">Share your score with your teacher:</div>
           <div class="name-input">
             <label for="studentName">Your Name (optional)</label>
             <input type="text" id="studentName" placeholder="Enter your name" maxlength="50">
@@ -419,12 +419,12 @@
 
         <div class="legend">
           <span>Auto-advance when correct</span>
-          <span>Adaptive difficulty</span>
+          <span>Sharps shown as ♯</span>
           <span>Microphone required</span>
         </div>
 
         <div class="footer">
-          <strong>How it works:</strong> The trainer automatically adapts to your skill level. Start with open strings and progress through scales and chromatic exercises as you demonstrate proficiency. Visual feedback appears in real time. <strong>Timer starts when microphone is activated.</strong>
+          <strong>How it works:</strong> The trainer shows a note positioned exactly on staff lines/spaces/ledger lines for the chosen instrument and expects you to sing or play the matching pitch. Visual feedback appears in real time and the exercise auto-advances after a correct pitch is held. <strong>Timer starts when microphone is activated.</strong>
         </div>
       </div>
     </div>
@@ -446,10 +446,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /*
-  Adaptive Pitch Training System
-  - 4 progressive levels with automatic advancement
-  - Hidden scoring until completion
-  - 2-minute timer with adaptive difficulty
+  D Major Scale Staff Position Trainer
+  - Mobile compatible version with fixed SVG rendering and microphone access
 */
 
 // --- Configuration & note data ---
@@ -457,14 +455,7 @@ const instruments = {
   violin: {
     label: "Violin (Treble Clef)",
     clef: "treble",
-    // Level 1: Open strings
-    openStrings: [
-      {name:"A4", freq:440.00, pos:{type:"space",n:2}},
-      {name:"D4", freq:293.66, pos:{type:"space-below-line1"}},
-      {name:"G3", freq:196.00, pos:{type:"line-below-staff",ledgers:1}}
-    ],
-    // Level 2: D Major scale
-    dMajor: [
+    notes: [
       {name:"D4", freq:293.66, pos:{type:"space-below-line1"}},
       {name:"E4", freq:329.63, pos:{type:"line",n:1}},
       {name:"F♯4", freq:369.99, pos:{type:"space",n:1}, accidental:"#"},
@@ -473,30 +464,12 @@ const instruments = {
       {name:"B4", freq:493.88, pos:{type:"line",n:3}},
       {name:"C♯5", freq:554.37, pos:{type:"space",n:3}, accidental:"#"},
       {name:"D5", freq:587.33, pos:{type:"line",n:4}}
-    ],
-    // Level 3: B♭ Major scale
-    bFlatMajor: [
-      {name:"B♭3", freq:233.08, pos:{type:"line-below-staff",ledgers:1}, accidental:"b"},
-      {name:"C4", freq:261.63, pos:{type:"space-below-line1"}},
-      {name:"D4", freq:293.66, pos:{type:"space-below-line1"}},
-      {name:"E♭4", freq:311.13, pos:{type:"line",n:1}, accidental:"b"},
-      {name:"F4", freq:349.23, pos:{type:"space",n:1}},
-      {name:"G4", freq:392.00, pos:{type:"line",n:2}},
-      {name:"A4", freq:440.00, pos:{type:"space",n:2}},
-      {name:"B♭4", freq:466.16, pos:{type:"line",n:3}, accidental:"b"}
-    ],
-    // Level 4: Chromatic (G3-B5)
-    chromatic: generateChromaticRange("G3", "B5")
+    ]
   },
   viola: {
     label: "Viola (Alto Clef)",
     clef: "alto",
-    openStrings: [
-      {name:"A4", freq:440.00, pos:{type:"space-above-staff"}},
-      {name:"D4", freq:293.66, pos:{type:"space",n:3}},
-      {name:"G3", freq:196.00, pos:{type:"line",n:2}}
-    ],
-    dMajor: [
+    notes:[
       {name:"D4", freq:293.66, pos:{type:"space",n:3}},
       {name:"E4", freq:329.63, pos:{type:"line",n:4}},
       {name:"F♯4", freq:369.99, pos:{type:"space",n:4}, accidental:"#"},
@@ -505,28 +478,12 @@ const instruments = {
       {name:"B4", freq:493.88, pos:{type:"ledger-through",ledgers:1}},
       {name:"C♯5", freq:554.37, pos:{type:"space-above-ledger",ledgers:1}, accidental:"#"},
       {name:"D5", freq:587.33, pos:{type:"line-2-ledger",ledgers:2}}
-    ],
-    bFlatMajor: [
-      {name:"B♭3", freq:233.08, pos:{type:"line",n:3}, accidental:"b"},
-      {name:"C4", freq:261.63, pos:{type:"space",n:3}},
-      {name:"D4", freq:293.66, pos:{type:"space",n:3}},
-      {name:"E♭4", freq:311.13, pos:{type:"line",n:4}, accidental:"b"},
-      {name:"F4", freq:349.23, pos:{type:"space",n:4}},
-      {name:"G4", freq:392.00, pos:{type:"line",n:5}},
-      {name:"A4", freq:440.00, pos:{type:"space-above-staff"}},
-      {name:"B♭4", freq:466.16, pos:{type:"ledger-through",ledgers:1}, accidental:"b"}
-    ],
-    chromatic: generateChromaticRange("C3", "E5")
+    ]
   },
   cello: {
     label: "Cello (Bass Clef)",
     clef: "bass",
-    openStrings: [
-      {name:"A3", freq:220.00, pos:{type:"line",n:5}},
-      {name:"D3", freq:146.83, pos:{type:"line",n:3}},
-      {name:"G2", freq:98.00, pos:{type:"space",n:2}}
-    ],
-    dMajor: [
+    notes:[
       {name:"D3", freq:146.83, pos:{type:"line",n:3}},
       {name:"E3", freq:164.81, pos:{type:"space",n:3}},
       {name:"F♯3", freq:184.99, pos:{type:"line",n:4}, accidental:"#"},
@@ -535,28 +492,12 @@ const instruments = {
       {name:"B3", freq:246.94, pos:{type:"space-above-staff"}},
       {name:"C♯4", freq:277.18, pos:{type:"ledger-through",ledgers:1}, accidental:"#"},
       {name:"D4", freq:293.66, pos:{type:"space-above-ledger",ledgers:1}}
-    ],
-    bFlatMajor: [
-      {name:"B♭2", freq:116.54, pos:{type:"space",n:2}, accidental:"b"},
-      {name:"C3", freq:130.81, pos:{type:"line",n:3}},
-      {name:"D3", freq:146.83, pos:{type:"line",n:3}},
-      {name:"E♭3", freq:155.56, pos:{type:"space",n:3}, accidental:"b"},
-      {name:"F3", freq:174.61, pos:{type:"line",n:4}},
-      {name:"G3", freq:196.00, pos:{type:"space",n:4}},
-      {name:"A3", freq:220.00, pos:{type:"line",n:5}},
-      {name:"B♭3", freq:233.08, pos:{type:"space-above-staff"}, accidental:"b"}
-    ],
-    chromatic: generateChromaticRange("C2", "D4")
+    ]
   },
   doublebass: {
     label: "Double Bass (Bass Clef 8vb)",
     clef: "bass-8vb",
-    openStrings: [
-      {name:"G2", freq:98.00, pos:{type:"space",n:4}},
-      {name:"D2", freq:73.42, pos:{type:"line",n:3}},
-      {name:"A1", freq:55.00, pos:{type:"space-below-staff",ledgers:1}}
-    ],
-    dMajor: [
+    notes:[
       {name:"D2", freq:73.42, pos:{type:"line",n:3}},
       {name:"E2", freq:82.41, pos:{type:"space",n:3}},
       {name:"F♯2", freq:92.50, pos:{type:"line",n:4}, accidental:"#"},
@@ -565,61 +506,17 @@ const instruments = {
       {name:"B2", freq:123.47, pos:{type:"space-above-staff"}},
       {name:"C♯3", freq:138.59, pos:{type:"ledger-through",ledgers:1}, accidental:"#"},
       {name:"D3", freq:146.83, pos:{type:"space-above-ledger",ledgers:1}}
-    ],
-    bFlatMajor: [
-      {name:"B♭1", freq:58.27, pos:{type:"space-below-staff",ledgers:1}, accidental:"b"},
-      {name:"C2", freq:65.41, pos:{type:"line",n:3}},
-      {name:"D2", freq:73.42, pos:{type:"line",n:3}},
-      {name:"E♭2", freq:77.78, pos:{type:"space",n:3}, accidental:"b"},
-      {name:"F2", freq:87.31, pos:{type:"line",n:4}},
-      {name:"G2", freq:98.00, pos:{type:"space",n:4}},
-      {name:"A2", freq:110.00, pos:{type:"line",n:5}},
-      {name:"B♭2", freq:116.54, pos:{type:"space-above-staff"}, accidental:"b"}
-    ],
-    chromatic: generateChromaticRange("E1", "D3")
+    ]
   }
 };
 
-// Helper function to generate chromatic ranges
-function generateChromaticRange(startNote, endNote) {
-  const noteFrequencies = {
-    // Chromatic scale frequencies (simplified)
-    "E1": 41.20, "F1": 43.65, "F♯1": 46.25, "G1": 49.00, "G♯1": 51.91, "A1": 55.00, "A♯1": 58.27, "B1": 61.74,
-    "C2": 65.41, "C♯2": 69.30, "D2": 73.42, "D♯2": 77.78, "E2": 82.41, "F2": 87.31, "F♯2": 92.50, "G2": 98.00, "G♯2": 103.83, "A2": 110.00, "A♯2": 116.54, "B2": 123.47,
-    "C3": 130.81, "C♯3": 138.59, "D3": 146.83, "D♯3": 155.56, "E3": 164.81, "F3": 174.61, "F♯3": 185.00, "G3": 196.00, "G♯3": 207.65, "A3": 220.00, "A♯3": 233.08, "B3": 246.94,
-    "C4": 261.63, "C♯4": 277.18, "D4": 293.66, "D♯4": 311.13, "E4": 329.63, "F4": 349.23, "F♯4": 369.99, "G4": 392.00, "G♯4": 415.30, "A4": 440.00, "A♯4": 466.16, "B4": 493.88,
-    "C5": 523.25, "C♯5": 554.37, "D5": 587.33, "D♯5": 622.25, "E5": 659.25, "F5": 698.46, "F♯5": 739.99, "G5": 783.99, "G♯5": 830.61, "A5": 880.00, "A♯5": 932.33, "B5": 987.77
-  };
-  
-  const notes = [];
-  const noteOrder = Object.keys(noteFrequencies);
-  const startIndex = noteOrder.indexOf(startNote);
-  const endIndex = noteOrder.indexOf(endNote);
-  
-  if (startIndex === -1 || endIndex === -1) {
-    console.error("Invalid note range:", startNote, endNote);
-    return [];
-  }
-  
-  for (let i = startIndex; i <= endIndex; i++) {
-    const noteName = noteOrder[i];
-    notes.push({
-      name: noteName,
-      freq: noteFrequencies[noteName],
-      // Simplified position - would need proper staff calculation for each note
-      pos: {type: "line", n: 3} // Placeholder
-    });
-  }
-  
-  return notes;
-}
-
-// --- Staff drawing utilities (SVG) ---
+// --- Staff drawing utilities (SVG) - MOBILE FIXED ---
 const staffEl = document.getElementById('staff');
 
 function createSVG() {
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, 'svg');
+  // Use responsive dimensions
   svg.setAttribute('viewBox', '0 0 720 300');
   svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
   svg.style.width = '100%';
@@ -633,6 +530,7 @@ const svg = createSVG();
 staffEl.appendChild(svg);
 
 function drawStaffBase(clefGlyph, clefSuffix = '') {
+  // Clear previous content
   while (svg.firstChild) {
     svg.removeChild(svg.firstChild);
   }
@@ -640,6 +538,7 @@ function drawStaffBase(clefGlyph, clefSuffix = '') {
   const svgNS = "http://www.w3.org/2000/svg";
   const WIDTH = 720, HEIGHT = 300;
 
+  // Staff positioning - adjusted for mobile
   const left = 80, right = WIDTH - 40;
   const top = 60;
   const spacing = 24;
@@ -696,6 +595,7 @@ function drawStaffBase(clefGlyph, clefSuffix = '') {
   return {svg, left, right, staffTop, spacing, lineCount, staffHeight};
 }
 
+// Rest of the position calculation and rendering functions remain the same...
 function yForPosition(pos, coords){
   const {staffTop, spacing} = coords;
   const lineYs = [];
@@ -716,12 +616,11 @@ function yForPosition(pos, coords){
     case "line": return lineY(pos.n);
     case "space": return spaceBetween(pos.n);
     case "space-below-line1": return lineY(1) + spacing/2;
+    case "on-top-line": return lineY(5) - spacing/2;
     case "space-above-staff": return lineY(5) - spacing/2;
     case "ledger-through": return lineY(5) - spacing;
     case "space-above-ledger": return lineY(5) - spacing - spacing/2;
     case "line-2-ledger": return lineY(5) - spacing*2;
-    case "line-below-staff": return lineY(1) + spacing;
-    case "space-below-staff": return lineY(1) + spacing + spacing/2;
     default: return (lineY(3) + lineY(2))/2;
   }
 }
@@ -737,10 +636,7 @@ function renderNoteForInstrument(instKey, noteIndex){
 
   const coords = drawStaffBase(glyph, suffix);
   const svgNS = "http://www.w3.org/2000/svg";
-  
-  // Get current note based on level
-  const currentNoteSet = getCurrentNoteSet();
-  const target = currentNoteSet[noteIndex];
+  const target = inst.notes[noteIndex];
   const noteX = coords.left + (coords.right - coords.left) * 0.6;
   const y = yForPosition(target.pos, coords);
 
@@ -757,13 +653,11 @@ function renderNoteForInstrument(instKey, noteIndex){
   }
 
   if (target.pos.ledgers) {
-    const ledgerCount = target.pos.ledgers;
-    for (let i = 1; i <= ledgerCount; i++) {
-      if (target.pos.type.includes('below')) {
-        drawLedgerAt(coords.staffTop + coords.spacing * i);
-      } else {
-        drawLedgerAt(coords.staffTop - coords.spacing * i);
-      }
+    if (target.pos.ledgers >= 1) {
+      drawLedgerAt(coords.staffTop - coords.spacing);
+    }
+    if (target.pos.ledgers >= 2) {
+      drawLedgerAt(coords.staffTop - coords.spacing * 2);
     }
   }
 
@@ -786,14 +680,6 @@ function renderNoteForInstrument(instKey, noteIndex){
     acc.setAttribute('font-weight',700);
     acc.textContent = '♯';
     svg.appendChild(acc);
-  } else if (target.accidental === 'b') {
-    const acc = document.createElementNS(svgNS,'text');
-    acc.setAttribute('x', noteX - 36);
-    acc.setAttribute('y', y + 6);
-    acc.setAttribute('font-size',22);
-    acc.setAttribute('font-weight',700);
-    acc.textContent = '♭';
-    svg.appendChild(acc);
   }
 
   return {target, y, noteX};
@@ -801,6 +687,7 @@ function renderNoteForInstrument(instKey, noteIndex){
 
 // --- Pitch detection (autocorrelation) ---
 function autoCorrelate(buf, sampleRate) {
+  // ... (same as before)
   const SIZE = buf.length;
   let rms = 0;
   for (let i = 0; i < SIZE; i++) {
@@ -849,7 +736,7 @@ function autoCorrelate(buf, sampleRate) {
   return freq;
 }
 
-// --- Audio setup & detection loop ---
+// --- Audio setup & detection loop - MOBILE FIXED ---
 let audioContext = null;
 let analyser = null;
 let mediaStream = null;
@@ -857,17 +744,10 @@ let buflen = 2048;
 let buf = new Float32Array(buflen);
 let running = false;
 
-// Adaptive system variables
-let currentLevel = 1;
-let correctCount = 0;
-let levelStartTime = 0;
-let notesInCurrentSet = 0;
-let totalScore = 0;
-let scoreHidden = true;
-
-// Timer variables
+// Timer and score variables
 let timerInterval = null;
-let timeRemaining = 120; // 2 minutes
+let timeRemaining = 60;
+let score = 0;
 
 // UI references
 const instrSelect = document.getElementById('instrument');
@@ -898,54 +778,16 @@ const shareScore = document.getElementById('shareScore');
 
 let instKey = instrSelect.value;
 let inst = instruments[instKey];
-let currentNoteIndex = 0;
+let playOrder = [];
+let currentIndex = 0;
 let currentRendered = null;
+let firstRoundCompleted = false;
+let tuningCheckCompleted = false; // NEW: Track if tuning check is done
 let toleranceCents = parseInt(toleranceSlider.value,10);
 let holdTime = parseInt(holdSlider.value,10);
 let holdTimer = null;
 
-// Adaptive system functions
-function getCurrentNoteSet() {
-  const inst = instruments[instKey];
-  switch(currentLevel) {
-    case 1: return inst.openStrings;
-    case 2: return inst.dMajor;
-    case 3: return inst.bFlatMajor;
-    case 4: return inst.chromatic;
-    default: return inst.openStrings;
-  }
-}
-
-function getPointsForLevel() {
-  return currentLevel * 10; // 10, 20, 30, 40 points
-}
-
-function startNewLevel() {
-  currentNoteIndex = 0;
-  correctCount = 0;
-  levelStartTime = Date.now();
-  notesInCurrentSet = 0;
-  renderCurrentNote();
-}
-
-function checkLevelAdvancement() {
-  const timeElapsed = Date.now() - levelStartTime;
-  const timeLimit = currentLevel === 1 ? 15000 : 30000; // 15s for level 1, 30s for others
-  const requiredNotes = currentLevel === 1 ? 5 : 10;
-  
-  if (correctCount >= requiredNotes && timeElapsed <= timeLimit) {
-    if (currentLevel < 4) {
-      currentLevel++;
-      startNewLevel();
-    }
-  } else if (correctCount >= requiredNotes) {
-    // Reset counter for next check
-    correctCount = 0;
-    levelStartTime = Date.now();
-  }
-}
-
-// Settings lock functions
+// NEW: Functions to lock/unlock settings
 function lockSettings() {
   toleranceSlider.disabled = true;
   holdSlider.disabled = true;
@@ -958,11 +800,14 @@ function unlockSettings() {
   settingsContainer.classList.remove('disabled');
 }
 
-// Timer functions
+// Timer functions (same as before)
 function startTimer() {
-  timeRemaining = 120;
+  timeRemaining = 60;
+  score = 0;
   updateTimerDisplay();
+  updateScoreDisplay();
   
+  // NEW: Lock settings when timer starts
   lockSettings();
   
   timerInterval = setInterval(() => {
@@ -972,7 +817,9 @@ function startTimer() {
     if (timeRemaining <= 0) {
       stopTimer();
       stopAudio();
-      endSession();
+      feedbackEl.textContent = "Time's up! Final score: " + score;
+      feedbackEl.style.color = '#1f7a8c';
+      shareSection.style.display = 'block';
     }
   }, 1000);
 }
@@ -982,6 +829,8 @@ function stopTimer() {
     clearInterval(timerInterval);
     timerInterval = null;
   }
+  
+  // NEW: Unlock settings when timer stops
   unlockSettings();
 }
 
@@ -993,35 +842,29 @@ function updateTimerDisplay() {
 }
 
 function updateScoreDisplay() {
-  if (scoreHidden) {
-    scoreValue.textContent = '—';
-  } else {
-    scoreValue.textContent = totalScore;
-  }
+  scoreValue.textContent = score;
 }
 
-function endSession() {
-  scoreHidden = false;
+function incrementScore() {
+  score++;
   updateScoreDisplay();
-  feedbackEl.textContent = `Session complete! Final score: ${totalScore}, Reached level: ${currentLevel}`;
-  feedbackEl.style.color = '#1f7a8c';
-  shareSection.style.display = 'block';
 }
 
-// Share score functionality
+// Share score functionality - MODIFIED to include settings
 function generateShareLink() {
   const instrument = instrSelect.options[instrSelect.selectedIndex].text;
   const date = new Date().toLocaleDateString();
   const time = new Date().toLocaleTimeString();
   const name = studentName.value.trim() || 'Anonymous Student';
   
+  // Include tolerance and hold time in the shared data
   const shareData = {
     name: name,
     instrument: instrument,
-    score: totalScore,
-    level: currentLevel,
+    score: score,
     date: date,
     time: time,
+    maxPossible: inst.notes.length * 2,
     tolerance: toleranceCents,
     holdTime: holdTime
   };
@@ -1061,12 +904,12 @@ function checkForSharedScore() {
     const encodedData = hash.split('score=')[1];
     try {
       const shareData = JSON.parse(atob(encodedData));
+      // Updated message to include settings
       const message = `🎵 Music Practice Results 🎵
 
 Student: ${shareData.name}
 Instrument: ${shareData.instrument}
-Score: ${shareData.score}
-Level Reached: ${shareData.level}
+Score: ${shareData.score} notes correct
 Settings: ±${shareData.tolerance} cents tolerance, ${shareData.holdTime}ms hold time
 Date: ${shareData.date}
 Time: ${shareData.time}
@@ -1081,40 +924,45 @@ Great job ${shareData.name.split(' ')[0]}! 🎉`;
   }
 }
 
-// Note progression
-function renderCurrentNote() {
-  const currentNoteSet = getCurrentNoteSet();
-  
-  // For level 1, follow specific sequence: A -> D -> G -> random
-  if (currentLevel === 1) {
-    if (currentNoteIndex < 3) {
-      // Fixed sequence: A, D, G
-      currentRendered = renderNoteForInstrument(instKey, currentNoteIndex);
-    } else {
-      // Random from open strings
-      const randomIndex = Math.floor(Math.random() * 3);
-      currentRendered = renderNoteForInstrument(instKey, randomIndex);
-    }
+// NEW: Modified to start with D and A (open strings)
+function initPlayOrder() {
+  // Start with just D and A notes (open strings)
+  if (!tuningCheckCompleted) {
+    // Find indices of D and A notes
+    const dIndex = inst.notes.findIndex(note => note.name.includes('D'));
+    const aIndex = inst.notes.findIndex(note => note.name.includes('A'));
+    playOrder = [dIndex, aIndex];
   } else {
-    // For other levels, random selection from current note set
-    const randomIndex = Math.floor(Math.random() * currentNoteSet.length);
-    currentRendered = renderNoteForInstrument(instKey, randomIndex);
+    // After tuning check, use all notes
+    playOrder = inst.notes.map((_, i) => i);
+  }
+  currentIndex = 0;
+  firstRoundCompleted = false;
+}
+
+// Fisher-Yates shuffle
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
   }
 }
 
-function advanceNote() {
-  const currentNoteSet = getCurrentNoteSet();
+// Render current note
+function renderCurrentNote() {
+  if (!inst || playOrder.length === 0) return;
+  const realIndex = playOrder[currentIndex];
+  currentRendered = renderNoteForInstrument(instKey, realIndex);
   
-  if (currentLevel === 1 && currentNoteIndex < 3) {
-    // Follow fixed sequence for first 3 notes
-    currentNoteIndex++;
+  // NEW: Update feedback message based on stage
+  if (!tuningCheckCompleted && currentIndex < 2) {
+    const noteName = inst.notes[realIndex].name;
+    feedbackEl.textContent = `Tuning check: Play your open ${noteName} string`;
+    feedbackEl.style.color = '#1f7a8c';
   } else {
-    // Random selection for all other cases
-    currentNoteIndex = Math.floor(Math.random() * currentNoteSet.length);
+    feedbackEl.textContent = 'Sing/play the displayed pitch';
+    feedbackEl.style.color = '#333';
   }
-  
-  notesInCurrentSet++;
-  renderCurrentNote();
 }
 
 // Update instrument
@@ -1126,13 +974,10 @@ function updateInstrument(){
   else if (inst.clef === 'bass') clefLabel.textContent = inst.label.split(' ')[0] + ' (Bass Clef)';
   else if (inst.clef === 'bass-8vb') clefLabel.textContent = inst.label.split(' ')[0] + ' (Bass Clef 8vb)';
   
-  // Reset adaptive system
-  currentLevel = 1;
-  correctCount = 0;
-  totalScore = 0;
-  scoreHidden = true;
-  startNewLevel();
-  updateScoreDisplay();
+  // NEW: Reset tuning check when instrument changes
+  tuningCheckCompleted = false;
+  initPlayOrder();
+  renderCurrentNote();
 }
 
 // Event listeners
@@ -1158,10 +1003,8 @@ refPlay.addEventListener('click', ()=>{
   const gain = oscCtx.createGain();
   gain.gain.value = 0.1;
   oscNode.type = 'sine';
-  const currentNoteSet = getCurrentNoteSet();
-  const targetNote = currentLevel === 1 && currentNoteIndex < 3 ? 
-    currentNoteSet[currentNoteIndex] : currentNoteSet[Math.floor(Math.random() * currentNoteSet.length)];
-  oscNode.frequency.value = targetNote.freq;
+  const realIndex = playOrder[currentIndex];
+  oscNode.frequency.value = inst.notes[realIndex].freq;
   oscNode.connect(gain);
   gain.connect(oscCtx.destination);
   oscNode.start();
@@ -1169,30 +1012,32 @@ refPlay.addEventListener('click', ()=>{
 });
 
 resetBtn.addEventListener('click', ()=>{
-  currentLevel = 1;
-  correctCount = 0;
-  totalScore = 0;
-  scoreHidden = true;
-  startNewLevel();
-  updateScoreDisplay();
-  feedbackEl.textContent = 'Exercise reset to beginning.';
+  // NEW: Reset both tuning check and sequence
+  tuningCheckCompleted = false;
+  initPlayOrder();
+  renderCurrentNote();
+  feedbackEl.textContent = 'Sequence reset. Starting with tuning check.';
 });
 
 // Share score button
 shareScore.addEventListener('click', generateShareLink);
 copyLink.addEventListener('click', copyToClipboard);
 
-// Start microphone
+// Start microphone - MOBILE FIXED
 startBtn.addEventListener('click', async ()=>{
   if (running) return;
   
+  // Mobile-specific user gesture requirement
   try {
+    // First ensure we're in a user gesture context
     if (audioContext && audioContext.state === 'suspended') {
       await audioContext.resume();
     }
     
+    // Request microphone access
     mediaStream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
     
+    // Create audio context if needed
     if (!audioContext) {
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -1207,10 +1052,7 @@ startBtn.addEventListener('click', async ()=>{
     stopBtn.disabled = false;
     feedbackEl.textContent = 'Listening...';
     
-    // Start adaptive system
-    levelStartTime = Date.now();
-    
-    // Start timer
+    // Start timer when microphone is activated
     startTimer();
     
     // Start detection loop
@@ -1238,7 +1080,7 @@ function stopAudio() {
   stopTimer();
 }
 
-// Pitch detection loop
+// NEW: Modified pitch detection to handle tuning check progression
 function detectPitch() {
   if (!running) return;
   
@@ -1250,10 +1092,8 @@ function detectPitch() {
   if (freq !== -1) {
     detectedFreqEl.textContent = freq.toFixed(1) + ' Hz';
     
-    const currentNoteSet = getCurrentNoteSet();
-    const targetNote = currentLevel === 1 && currentNoteIndex < 3 ? 
-      currentNoteSet[currentNoteIndex] : currentNoteSet[Math.floor(Math.random() * currentNoteSet.length)];
-    const targetFreq = targetNote.freq;
+    const realIndex = playOrder[currentIndex];
+    const targetFreq = inst.notes[realIndex].freq;
     const cents = 1200 * Math.log2(freq / targetFreq);
     
     detectedCentsEl.textContent = cents.toFixed(1) + ' cents';
@@ -1267,15 +1107,25 @@ function detectPitch() {
       
       if (!holdTimer) {
         holdTimer = setTimeout(() => {
-          // Add points and advance
-          totalScore += getPointsForLevel();
-          correctCount++;
-          notesInCurrentSet++;
+          // Advance to next note
+          currentIndex++;
           
-          // Check for level advancement
-          checkLevelAdvancement();
+          // NEW: Handle progression from tuning check to full scale
+          if (!tuningCheckCompleted && currentIndex >= playOrder.length) {
+            // Tuning check completed, switch to full scale
+            tuningCheckCompleted = true;
+            initPlayOrder(); // This will now create the full scale order
+            feedbackEl.textContent = 'Tuning check complete! Now playing full D Major scale.';
+            feedbackEl.style.color = '#1f7a8c';
+          } else if (currentIndex >= playOrder.length) {
+            // Full scale completed, shuffle and continue
+            currentIndex = 0;
+            firstRoundCompleted = true;
+            shuffleArray(playOrder);
+          }
           
-          advanceNote();
+          renderCurrentNote();
+          incrementScore();
           holdTimer = null;
         }, holdTime);
       }
