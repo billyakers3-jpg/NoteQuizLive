@@ -1,10 +1,10 @@
-[NoteQuizLive (2).html](https://github.com/user-attachments/files/22782173/NoteQuizLive.2.html)
+[NoteQuizLive2.html](https://github.com/user-attachments/files/22798969/NoteQuizLive2.html)
 <!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Note Quiz Live</title>
+<title>D Major Scale Staff Position Trainer</title>
 <style>
   :root{
     --bg:#10121a;
@@ -344,9 +344,9 @@
 </style>
 </head>
 <body>
-  <div class="container" role="application" aria-label="Note Quiz Live">
+  <div class="container" role="application" aria-label="D Major Scale Staff Position Trainer">
     <header>
-      <h1>Note Quiz Live</h1>
+      <h1>D Major Scale — Staff Position Trainer</h1>
       <div class="controls">
         <label for="instrument">Instrument</label>
         <select id="instrument" aria-label="Instrument selector">
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 /*
-  Note Quiz Live
+  D Major Scale Staff Position Trainer
   - Mobile compatible version with fixed SVG rendering and microphone access
 */
 
@@ -993,203 +993,79 @@ holdSlider.addEventListener('input', ()=>{
   holdVal.textContent = holdTime;
 });
 
+// Reference oscillator
+let oscCtx = null;
+let oscNode = null;
 refPlay.addEventListener('click', ()=>{
-  if (!currentRendered) return;
-  playTone(currentRendered.target.freq);
+  if (!oscCtx) oscCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (oscNode) { oscNode.stop(); oscNode.disconnect(); oscNode = null; return; }
+  oscNode = oscCtx.createOscillator();
+  const gain = oscCtx.createGain();
+  gain.gain.value = 0.1;
+  oscNode.type = 'sine';
+  const realIndex = playOrder[currentIndex];
+  oscNode.frequency.value = inst.notes[realIndex].freq;
+  oscNode.connect(gain);
+  gain.connect(oscCtx.destination);
+  oscNode.start();
+  setTimeout(()=>{ if (oscNode){ oscNode.stop(); oscNode.disconnect(); oscNode=null; } }, 1200);
 });
 
 resetBtn.addEventListener('click', ()=>{
-  // NEW: Reset tuning check when resetting
+  // NEW: Reset both tuning check and sequence
   tuningCheckCompleted = false;
   initPlayOrder();
   renderCurrentNote();
-  feedbackEl.textContent = 'Sequence reset';
-  feedbackEl.style.color = '#1f7a8c';
-  setTimeout(() => {
-    feedbackEl.textContent = 'Sing/play the displayed pitch';
-    feedbackEl.style.color = '#333';
-  }, 2000);
+  feedbackEl.textContent = 'Sequence reset. Starting with tuning check.';
 });
 
+// Share score button
 shareScore.addEventListener('click', generateShareLink);
 copyLink.addEventListener('click', copyToClipboard);
 
-// Tone playback (Web Audio)
-function playTone(freq, duration = 1000) {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  const osc = audioContext.createOscillator();
-  const gain = audioContext.createGain();
-  osc.connect(gain);
-  gain.connect(audioContext.destination);
-  osc.frequency.value = freq;
-  osc.type = 'sine';
-  gain.gain.value = 0.1;
-  osc.start();
-  gain.gain.exponentialRampToValueAtTime(0.0001, audioContext.currentTime + duration / 1000);
-  osc.stop(audioContext.currentTime + duration / 1000);
-}
-
-// NEW: Modified detection logic for tuning check
-function detectPitch() {
-  if (!running) return;
-  if (!analyser) return;
-
-  analyser.getFloatTimeDomainData(buf);
-  const freq = autoCorrelate(buf, audioContext.sampleRate);
+// Start microphone - MOBILE FIXED
+startBtn.addEventListener('click', async ()=>{
+  if (running) return;
   
-  if (freq !== -1) {
-    detectedFreqEl.textContent = freq.toFixed(1) + ' Hz';
-    const currentNote = inst.notes[playOrder[currentIndex]];
-    const cents = 1200 * Math.log2(freq / currentNote.freq);
-    detectedCentsEl.textContent = cents.toFixed(0) + ' cents';
-    
-    // NEW: Different behavior during tuning check
-    if (!tuningCheckCompleted && currentIndex < 2) {
-      // Tuning check phase - just show feedback, don't auto-advance
-      if (Math.abs(cents) < toleranceCents) {
-        feedbackEl.textContent = '✓ In tune!';
-        feedbackEl.style.color = '#2a9d8f';
-        meterBar.style.width = '100%';
-        meterBar.style.background = 'linear-gradient(90deg,var(--low),var(--ok))';
-        
-        // After brief success, move to next tuning note
-        clearTimeout(holdTimer);
-        holdTimer = setTimeout(() => {
-          if (currentIndex < 1) {
-            currentIndex++;
-            renderCurrentNote();
-          } else {
-            // Both tuning notes completed
-            tuningCheckCompleted = true;
-            feedbackEl.textContent = '✓ Tuning check complete! Starting exercise...';
-            feedbackEl.style.color = '#2a9d8f';
-            
-            // Initialize full exercise
-            setTimeout(() => {
-              initPlayOrder(); // This will now include all notes
-              shuffleArray(playOrder);
-              renderCurrentNote();
-              feedbackEl.textContent = 'Sing/play the displayed pitch';
-              feedbackEl.style.color = '#333';
-            }, 1500);
-          }
-        }, 1000); // Shorter hold time for tuning check
-      } else {
-        feedbackEl.textContent = cents > 0 ? '↑ Too high' : '↓ Too low';
-        feedbackEl.style.color = '#ef476f';
-        const percent = Math.min(100, Math.abs(cents) / 50 * 100);
-        meterBar.style.width = percent + '%';
-        meterBar.style.background = 'linear-gradient(90deg,var(--low),var(--high))';
-        clearTimeout(holdTimer);
-      }
-    } else {
-      // Normal exercise phase
-      if (Math.abs(cents) < toleranceCents) {
-        feedbackEl.textContent = '✓ Correct!';
-        feedbackEl.style.color = '#2a9d8f';
-        meterBar.style.width = '100%';
-        meterBar.style.background = 'linear-gradient(90deg,var(--low),var(--ok))';
-        
-        clearTimeout(holdTimer);
-        holdTimer = setTimeout(() => {
-          // Move to next note
-          currentIndex++;
-          if (currentIndex >= playOrder.length) {
-            if (!firstRoundCompleted) {
-              firstRoundCompleted = true;
-              playOrder = inst.notes.map((_, i) => i);
-              shuffleArray(playOrder);
-            }
-            currentIndex = 0;
-          }
-          renderCurrentNote();
-          incrementScore();
-        }, holdTime);
-      } else {
-        feedbackEl.textContent = cents > 0 ? '↑ Too high' : '↓ Too low';
-        feedbackEl.style.color = '#ef476f';
-        const percent = Math.min(100, Math.abs(cents) / 50 * 100);
-        meterBar.style.width = percent + '%';
-        meterBar.style.background = 'linear-gradient(90deg,var(--low),var(--high))';
-        clearTimeout(holdTimer);
-      }
-    }
-  } else {
-    detectedFreqEl.textContent = '— Hz';
-    detectedCentsEl.textContent = '— cents';
-    feedbackEl.textContent = 'No pitch detected';
-    feedbackEl.style.color = '#666';
-    meterBar.style.width = '0%';
-    clearTimeout(holdTimer);
-  }
-  
-  requestAnimationFrame(detectPitch);
-}
-
-// Start/stop microphone
-startBtn.addEventListener('click', async () => {
+  // Mobile-specific user gesture requirement
   try {
-    // Reset state
-    stopTimer();
-    timeRemaining = 60;
-    score = 0;
-    updateTimerDisplay();
-    updateScoreDisplay();
-    shareSection.style.display = 'none';
-    
-    // NEW: Reset tuning check when starting
-    tuningCheckCompleted = false;
-    
-    if (!audioContext) {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    
-    // Resume audio context on user gesture (mobile requirement)
-    if (audioContext.state === 'suspended') {
+    // First ensure we're in a user gesture context
+    if (audioContext && audioContext.state === 'suspended') {
       await audioContext.resume();
     }
     
-    mediaStream = await navigator.mediaDevices.getUserMedia({ 
-      audio: {
-        echoCancellation: false,
-        noiseSuppression: false,
-        autoGainControl: false
-      } 
-    });
+    // Request microphone access
+    mediaStream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+    
+    // Create audio context if needed
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
     
     const source = audioContext.createMediaStreamSource(mediaStream);
     analyser = audioContext.createAnalyser();
     analyser.fftSize = 2048;
     source.connect(analyser);
     
-    initPlayOrder();
-    renderCurrentNote();
-    
     running = true;
     startBtn.disabled = true;
     stopBtn.disabled = false;
+    feedbackEl.textContent = 'Listening...';
     
-    // Start timer and detection
+    // Start timer when microphone is activated
     startTimer();
+    
+    // Start detection loop
     detectPitch();
-    
-    feedbackEl.textContent = 'Microphone active - begin playing!';
-    feedbackEl.style.color = '#2a9d8f';
-    
   } catch (err) {
-    console.error('Error accessing microphone:', err);
-    feedbackEl.textContent = 'Microphone access denied or not available';
-    feedbackEl.style.color = '#ef476f';
+    console.error('Error starting microphone:', err);
+    feedbackEl.textContent = 'Microphone access denied or not available.';
   }
 });
 
-stopBtn.addEventListener('click', () => {
+// Stop microphone
+stopBtn.addEventListener('click', ()=>{
   stopAudio();
-  stopTimer();
-  feedbackEl.textContent = 'Microphone stopped';
-  feedbackEl.style.color = '#666';
 });
 
 function stopAudio() {
@@ -1198,9 +1074,86 @@ function stopAudio() {
     mediaStream.getTracks().forEach(track => track.stop());
     mediaStream = null;
   }
-  analyser = null;
   startBtn.disabled = false;
   stopBtn.disabled = true;
+  feedbackEl.textContent = 'Microphone stopped.';
+  stopTimer();
+}
+
+// NEW: Modified pitch detection to handle tuning check progression
+function detectPitch() {
+  if (!running) return;
+  
+  const dataArray = new Float32Array(analyser.fftSize);
+  analyser.getFloatTimeDomainData(dataArray);
+  
+  const freq = autoCorrelate(dataArray, audioContext.sampleRate);
+  
+  if (freq !== -1) {
+    detectedFreqEl.textContent = freq.toFixed(1) + ' Hz';
+    
+    const realIndex = playOrder[currentIndex];
+    const targetFreq = inst.notes[realIndex].freq;
+    const cents = 1200 * Math.log2(freq / targetFreq);
+    
+    detectedCentsEl.textContent = cents.toFixed(1) + ' cents';
+    
+    const absCents = Math.abs(cents);
+    if (absCents < toleranceCents) {
+      feedbackEl.textContent = 'Perfect!';
+      feedbackEl.style.color = '#2a9d8f';
+      meterBar.style.background = 'linear-gradient(90deg,var(--low),var(--ok))';
+      meterBar.style.width = '100%';
+      
+      if (!holdTimer) {
+        holdTimer = setTimeout(() => {
+          // Advance to next note
+          currentIndex++;
+          
+          // NEW: Handle progression from tuning check to full scale
+          if (!tuningCheckCompleted && currentIndex >= playOrder.length) {
+            // Tuning check completed, switch to full scale
+            tuningCheckCompleted = true;
+            initPlayOrder(); // This will now create the full scale order
+            feedbackEl.textContent = 'Tuning check complete! Now playing full D Major scale.';
+            feedbackEl.style.color = '#1f7a8c';
+          } else if (currentIndex >= playOrder.length) {
+            // Full scale completed, shuffle and continue
+            currentIndex = 0;
+            firstRoundCompleted = true;
+            shuffleArray(playOrder);
+          }
+          
+          renderCurrentNote();
+          incrementScore();
+          holdTimer = null;
+        }, holdTime);
+      }
+    } else {
+      feedbackEl.textContent = cents > 0 ? 'Too high' : 'Too low';
+      feedbackEl.style.color = cents > 0 ? '#ef476f' : '#ffd166';
+      meterBar.style.background = cents > 0 ? '#ef476f' : '#ffd166';
+      meterBar.style.width = Math.min(100, absCents / 2) + '%';
+      
+      if (holdTimer) {
+        clearTimeout(holdTimer);
+        holdTimer = null;
+      }
+    }
+  } else {
+    detectedFreqEl.textContent = '— Hz';
+    detectedCentsEl.textContent = '— cents';
+    feedbackEl.textContent = 'No pitch detected';
+    feedbackEl.style.color = '#666';
+    meterBar.style.width = '0%';
+    
+    if (holdTimer) {
+      clearTimeout(holdTimer);
+      holdTimer = null;
+    }
+  }
+  
+  requestAnimationFrame(detectPitch);
 }
 
 // Initialize
